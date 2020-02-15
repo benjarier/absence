@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="50" height="35" viewBox="0 0 50 35">
+  <g fill="none" fill-rule="evenodd" stroke="#FFFFFF" stroke-width="2" transform="translate(1 1)">
+    <polygon points="0 33 0 7.425 1.765 7.425 1.765 4.809 9.22 4.809 9.22 7.425 13.438 7.425 19.916 0 28.084 0 34.497 7.425 48 7.425 48 33"/>
+    <ellipse cx="24.5" cy="19" rx="9.5" ry="10"/>
+  </g>
+</svg>
