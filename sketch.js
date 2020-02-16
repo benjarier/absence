@@ -108,7 +108,7 @@ function draw() {
            timerOn = true;
          }
          if (millis() - timer < 5000) {
-           let s = "Installez vous, la photo sera prise dans " + ceil(5 - (millis() - timer) / 1000);
+           let s = "Installez-vous, la photo sera prise dans " + ceil(5 - (millis() - timer) / 1000);
            text(s, (wWidth - 320)/2, 700, 320);
          } else {
            if(destroyProg<1){
