@@ -1,3 +1,9 @@
+let cameraAuthorized = true;
+navigator.mediaDevices.getUserMedia({ audio: false, video: true })
+.catch(function(err) {
+  // alert("Le site à besoin de l'accès à la webcam pour prendre une photo, vous pouvez quand même charger une image");
+  cameraAuthorized = false;
+});
 let bodypix;
 let video;
 let segmentation;
@@ -8,8 +14,16 @@ let myFont;
 let wWidth = document.getElementsByTagName("body")[0].clientWidth;
 let wHeight = document.getElementsByTagName("body")[0].clientHeight;
 
-let imgWidth = 640;
-let imgHeight = 480;
+let imgWidth;
+let imgHeight;
+if(wWidth < 640 || wHeight < 480){
+  imgWidth = 240;
+  imgHeight = 180;
+} else {
+  imgWidth = 640
+  imgHeight = 480;
+}
+
 
 let timer;
 let timerOn;
@@ -21,9 +35,18 @@ let imgUpload;
 let selectedMode;
 
 
+var chrome   = navigator.userAgent.indexOf('Chrome') > -1;
+var explorer = navigator.userAgent.indexOf('MSIE') > -1;
+var firefox  = navigator.userAgent.indexOf('Firefox') > -1;
+var safari   = navigator.userAgent.indexOf("Safari") > -1;
+var camino   = navigator.userAgent.indexOf("Camino") > -1;
+var opera    = navigator.userAgent.toLowerCase().indexOf("op") > -1;
+if ((chrome) && (safari)) safari = false;
+if ((chrome) && (opera)) chrome = false;
+
 const options = {
   outputStride: 8, // 8, 16, or 32, default is 16
-  segmentationThreshold: 0.1 // 0 - 1, defaults to 0.5 
+  segmentationThreshold: 0.3 // 0 - 1, defaults to 0.5 
 }
 
 function preload() {
@@ -76,7 +99,7 @@ function gotResults(err, result) {
 }
 
 function drawcontour() {
-  console.log("DC");
+  
   shaderTexture.shader(theShader);
   theShader.setUniform('tex0', segmentation.backgroundMask);
   theShader.setUniform('iResolution', [imgWidth, 480]);
@@ -85,7 +108,18 @@ function drawcontour() {
 
   shaderTexture.rect((width-imgWidth) / 2, 160, imgWidth, imgHeight);
 
+
+  if(safari) {
+    push();
+    scale(1, -1);
+    translate(0, -height);
+    
+    image(shaderTexture, (width-imgWidth) / 2, height - imgHeight -160);
+    pop();
+ } else {
   image(shaderTexture, (width-imgWidth) / 2, 160);
+ }
+  
 
 }
 
@@ -109,14 +143,14 @@ function draw() {
          }
          if (millis() - timer < 5000) {
            let s = "Installez-vous, la photo sera prise dans " + ceil(5 - (millis() - timer) / 1000);
-           text(s, (wWidth - 320)/2, 700, 320);
+           text(s, (wWidth - 320)/2, 160+imgHeight+40, 320);
          } else {
            if(destroyProg<1){
              destroyProg += 0.004;
            }
            let s = "Correction "+ int(destroyProg*100) + "%";
            
-           text(s, (wWidth - 320)/2, 700, 320);
+           text(s, (wWidth - 320)/2, 160+imgHeight+40, 320);
            drawcontour();
          }
        }
@@ -138,7 +172,7 @@ function draw() {
         }
         let s = "Correction "+ int(destroyProg*100) + "%";
         
-        text(s, (wWidth - 320)/2, 700, 320);
+        text(s, (wWidth - 320)/2, 160+imgHeight+40, 320);
         drawcontour();
       }
       break;
@@ -151,7 +185,7 @@ function draw() {
     noLoop();
     button1 = createButton('Relancer');
     button1.class("btnReset");
-    button1.position((wWidth - 320)/2, 40);
+    button1.position((wWidth - 310)/2, 40);
     button1.mousePressed(function(){
       resetSketch();
       button1.remove();
@@ -198,19 +232,24 @@ function typeWriter(sentence, n, x, y, width, speed, callBack) {
 }
 
 function showButtons(){
-  button1 = createButton('Prendre une photo');
-  button1.class("btnPhoto");
-  button1.position((wWidth - 320)/2, 272);
-  button1.mousePressed(takePhoto);
+  if(cameraAuthorized){
+    button1 = createButton('Prendre une photo');
+    button1.class("btnPhoto");
+    button1.position((wWidth - 310)/2, 272);
+    button1.mousePressed(takePhoto);
+  }
+  
 
   button2 = createFileInput(uploadPhoto);
   button2.class("btnUpload");
-  button2.position((wWidth - 320)/2, 392);
+  button2.position((wWidth - 310)/2, 392);
 }
 
 function takePhoto(){
   bodypix.segment(video, gotResults);
-  button1.remove();
+  if(cameraAuthorized){
+    button1.remove();
+  }
   button2.remove();
   selectedMode = "cam";
   loop();
@@ -224,7 +263,9 @@ function uploadPhoto(file){
     img.hide();
     img.size(imgWidth, imgHeight);
     bodypix.segment(img, gotResults);
+    if(cameraAuthorized){
     button1.remove();
+  }
     button2.remove();
     setTimeout(
       function(){
@@ -236,4 +277,11 @@ function uploadPhoto(file){
   } else {
     imgUpload = null;
   }
+}
+
+function windowResized() {
+  resizeCanvas(windowWidth, windowHeight);
+  // if(windowWidth<imgWidth || windowHeight<imgHeight){
+  //   alert("Cette expérience nécessite un écran")
+  // }
 }
